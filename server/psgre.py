@@ -45,6 +45,7 @@ def send_message(value, nomor_hp, date):
         date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
         schedule_time = date_obj - timedelta(minutes=10)
         schedule_timestamp = int(schedule_time.timestamp())
+        print(f"Format Date - {schedule_timestamp}")
     except ValueError:
         print(f"Error: Invalid date format - {date}")
         schedule_timestamp = None
