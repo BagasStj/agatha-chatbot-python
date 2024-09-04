@@ -29,6 +29,7 @@ def check_for_update():
         # Cek apakah ada perubahan pada kolom yang dipantau
         if result and result[0] != last_value:
             last_value = result[0]
+            print(f"get data from database {result[0] , result[1] , result[2]}")
             send_message(result[0], result[1], result[2])
 
 def send_message(value, nomor_hp, date):
@@ -44,7 +45,8 @@ def send_message(value, nomor_hp, date):
     try:
         date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
         schedule_time = date_obj - timedelta(minutes=10)
-        schedule_timestamp = int(schedule_time.timestamp())
+        schedule_timestamp =  int(time.mktime(schedule_time.timetuple()))
+       
         print(f"Format Date - {schedule_timestamp}")
     except ValueError:
         print(f"Error: Invalid date format - {date}")
