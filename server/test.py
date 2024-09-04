@@ -4,34 +4,35 @@ import time
 import pytz
 
 # String tanggal dan waktu awal
-date='04-09-2024 08:54'
+date = '2024-09-05 07:05:00.000'
 
-
-def convert_to_unix_timestamp(date_string):
+def convert_to_unix_timestamp(jadwal_konsultasi):
     # Set timezone to WIB (Western Indonesian Time)
     wib = pytz.timezone('Asia/Jakarta')
     
-    # Parse the date string
-    dt_object = datetime.strptime(date_string, "%d-%m-%Y %H:%M")
+    # If jadwal_konsultasi is a string, parse it
+    if isinstance(jadwal_konsultasi, str):
+        jadwal_konsultasi = datetime.strptime(jadwal_konsultasi, "%Y-%m-%d %H:%M:%S.%f")
     
-    # Localize the datetime object to WIB
-    dt_object = wib.localize(dt_object)
+    # Ensure jadwal_konsultasi is aware of its timezone
+    if jadwal_konsultasi.tzinfo is None:
+        jadwal_konsultasi = wib.localize(jadwal_konsultasi)
+    else:
+        jadwal_konsultasi = jadwal_konsultasi.astimezone(wib)
     
     # Subtract 10 minutes
-    dt_object -= timedelta(minutes=10)
+    notification_time = jadwal_konsultasi - timedelta(minutes=10)
     
     # Convert to Unix timestamp
-    unix_timestamp = int(dt_object.timestamp())
+    unix_timestamp = int(notification_time.timestamp())
     
     return unix_timestamp
 
-
 # Parsing string ke objek datetime
-dt_object = datetime.strptime(date, "%d-%m-%Y %H:%M")
-date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
-schedule_time = date_obj - timedelta(minutes=10)
-schedule_timestamp =  int(time.mktime(schedule_time.timetuple()))
-       
+dt_object = datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
+schedule_time = dt_object - timedelta(minutes=10)
+schedule_timestamp = int(time.mktime(schedule_time.timetuple()))
+
 print(f"Format Date - {schedule_timestamp}")
 print(f"Format Date function - {convert_to_unix_timestamp(date)}")
 

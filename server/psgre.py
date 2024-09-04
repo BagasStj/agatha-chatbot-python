@@ -24,59 +24,63 @@ last_value = None
 def check_for_update():
     global last_value
     with connection.cursor() as cursor:
-        cursor.execute('SELECT no_antrian, nomor_hp, date FROM public."SampleDataNomorAntrian" ORDER BY id DESC LIMIT 1')
+        cursor.execute('''
+            SELECT nomor_antrean, nomor_hp, jadwal_konsultasi 
+            FROM public.datanomorantrian 
+            ORDER BY id DESC LIMIT 1
+        ''')
         result = cursor.fetchone()
 
-        # Cek apakah ada perubahan pada kolom yang dipantau
         if result and result[0] != last_value:
             last_value = result[0]
-            print(f"get data from database {result[0] , result[1] , result[2]}")
+            print(f"get data from database {result[0], result[1], result[2]}")
             send_message(result[0], result[1], result[2])
 
-def send_message(value, nomor_hp, date):
+def send_message(value, nomor_hp, jadwal_konsultasi):
     url = 'https://api.fonnte.com/send'
-    token = os.getenv('FONNTE_TOKEN')  # Get token from environment variable
+    token = os.getenv('FONNTE_TOKEN')
     
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
     }
     
-    # Convert date string to Unix timestamp and subtract 10 minutes
     try:
-        # date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
-        # schedule_time = date_obj - timedelta(minutes=10)
-        schedule_timestamp = convert_to_unix_timestamp(date)
-       
+        schedule_timestamp = convert_to_unix_timestamp(jadwal_konsultasi)
         print(f"Format Date - {schedule_timestamp}")
-    except ValueError:
-        print(f"Error: Invalid date format - {date}")
+    except ValueError as e:
+        print(f"Error: Invalid date format - {jadwal_konsultasi}. Error: {e}")
         schedule_timestamp = None
     
+    formatted_date = jadwal_konsultasi.strftime("%d-%m-%Y %H:%M")
     payload = {
-        'target': nomor_hp,  # Menggunakan nomor_hp dari database
-        'message': f'Jadwal Cek Rutin Dan Konsultasi Dokter Di Rumah Sakit Kami Adalah Pada Tanggal {date} , jangan lupa datang tepat waktu',
-        'schedule': schedule_timestamp  # Menggunakan Unix timestamp
+        'target': nomor_hp,
+        'message': f'Jadwal Cek Rutin Dan Konsultasi Dokter Di Rumah Sakit Kami Adalah Pada Tanggal {formatted_date}, jangan lupa datang tepat waktu',
+        'schedule': schedule_timestamp
     }
     
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     return response.json()
 
-def convert_to_unix_timestamp(date_string):
+def convert_to_unix_timestamp(jadwal_konsultasi):
     # Set timezone to WIB (Western Indonesian Time)
     wib = pytz.timezone('Asia/Jakarta')
     
-    # Parse the date string
-    dt_object = datetime.strptime(date_string, "%d-%m-%Y %H:%M")
+    # If jadwal_konsultasi is a string, parse it
+    if isinstance(jadwal_konsultasi, str):
+        jadwal_konsultasi = datetime.strptime(jadwal_konsultasi, "%Y-%m-%d %H:%M:%S.%f")
     
-    # Localize the datetime object to WIB
-    dt_object = wib.localize(dt_object)
+    # Ensure jadwal_konsultasi is aware of its timezone
+    if jadwal_konsultasi.tzinfo is None:
+        jadwal_konsultasi = wib.localize(jadwal_konsultasi)
+    else:
+        jadwal_konsultasi = jadwal_konsultasi.astimezone(wib)
     
     # Subtract 10 minutes
-    dt_object -= timedelta(minutes=10)
+    notification_time = jadwal_konsultasi - timedelta(minutes=10)
     
     # Convert to Unix timestamp
-    unix_timestamp = int(dt_object.timestamp())
+    unix_timestamp = int(notification_time.timestamp())
     
     return unix_timestamp
 
