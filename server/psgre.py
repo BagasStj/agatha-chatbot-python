@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import os
 from datetime import datetime, timedelta
+import pytz
 
 # Load the .env file
 load_dotenv()
@@ -43,9 +44,9 @@ def send_message(value, nomor_hp, date):
     
     # Convert date string to Unix timestamp and subtract 10 minutes
     try:
-        date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
-        schedule_time = date_obj - timedelta(minutes=10)
-        schedule_timestamp =  int(time.mktime(schedule_time.timetuple()))
+        # date_obj = datetime.strptime(date, "%d-%m-%Y %H:%M")
+        # schedule_time = date_obj - timedelta(minutes=10)
+        schedule_timestamp = convert_to_unix_timestamp(date)
        
         print(f"Format Date - {schedule_timestamp}")
     except ValueError:
@@ -60,6 +61,24 @@ def send_message(value, nomor_hp, date):
     
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     return response.json()
+
+def convert_to_unix_timestamp(date_string):
+    # Set timezone to WIB (Western Indonesian Time)
+    wib = pytz.timezone('Asia/Jakarta')
+    
+    # Parse the date string
+    dt_object = datetime.strptime(date_string, "%d-%m-%Y %H:%M")
+    
+    # Localize the datetime object to WIB
+    dt_object = wib.localize(dt_object)
+    
+    # Subtract 10 minutes
+    dt_object -= timedelta(minutes=10)
+    
+    # Convert to Unix timestamp
+    unix_timestamp = int(dt_object.timestamp())
+    
+    return unix_timestamp
 
 # Main loop
 if __name__ == "__main__":
