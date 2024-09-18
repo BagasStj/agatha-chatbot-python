@@ -16,6 +16,7 @@ connection = psycopg2.connect(
     user=os.getenv('DB_USER'),
     password=os.getenv('DB_PASSWORD'),
     dbname=os.getenv('DB_NAME'),
+    port=os.getenv('DB_PORT')
 )
 
 # Variable to store the last value of the monitored column
@@ -55,11 +56,12 @@ def send_message(value, nomor_hp, jadwal_konsultasi):
     formatted_date = jadwal_konsultasi.strftime("%d-%m-%Y %H:%M")
     payload = {
         'target': nomor_hp,
-        'message': f'Jadwal Cek Rutin Dan Konsultasi Dokter Di Rumah Sakit Kami Adalah Pada Tanggal {formatted_date}, jangan lupa datang tepat waktu \n Maaf Anda tidak dapat membalas pesan ini',
+        'message': f'Jadwal Cek Rutin Dan Konsultasi Dokter Di Rumah Sakit Kami Adalah Pada Tanggal {formatted_date}, jangan lupa datang tepat waktu \n \n Maaf Anda tidak dapat membalas pesan ini',
         'schedule': schedule_timestamp
     }
     
     response = requests.post(url, headers=headers, data=json.dumps(payload))
+    print(response.json())
     return response.json()
 
 def convert_to_unix_timestamp(jadwal_konsultasi):

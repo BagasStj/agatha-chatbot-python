@@ -4,7 +4,7 @@ import time
 import pytz
 
 # String tanggal dan waktu awal
-date = '2024-09-05 07:05:00.000'
+date = '2024-09-18 20:34:00.000'
 
 def convert_to_unix_timestamp(jadwal_konsultasi):
     # Set timezone to WIB (Western Indonesian Time)
